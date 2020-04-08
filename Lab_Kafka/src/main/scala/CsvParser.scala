@@ -42,7 +42,7 @@ object CsvParser extends App{
 
   violationDataset.show(100)
 
-  MyProducerDrone.LoadDataSetOfViolations(violationDataset)
+  //MyProducerDrone.LoadDataSetOfViolations(violationDataset)
 
 }
 
