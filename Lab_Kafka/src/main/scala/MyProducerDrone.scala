@@ -19,10 +19,13 @@ object MyProducerDrone extends App {
 
     val topic = "violations"
     println("Starting to load data into Kafka")
+    /*
+        TODO : Enlever le foreach
     vMsgs.foreach(vMsg => {
       val record = new ProducerRecord(topic, vMsg.summonNumber.toString, new Gson().toJson(vMsg))
       producer.send(record)
     })
+     */
     println("Data loaded into kafka")
     producer.close()
   }

@@ -21,16 +21,16 @@ object CsvParser extends App{
   println(df.count() + " rows in total")
 
   // Dataframe but with only the necessary columns
-  var filteredDataframe = df.select("Summons Number", "Plate ID", "Vehicle Body Type", "Violation Code", "Registration State")
+  val filteredDataframe = df.select("Summons Number", "Plate ID", "Vehicle Body Type", "Violation Code", "Registration State")
   // Replace NaN values
-  filteredDataframe = filteredDataframe.na.fill("Unknown")
-  filteredDataframe.show(10)
+  val filteredDfNotNull = filteredDataframe.na.fill("Unknown")
+  filteredDfNotNull.show(10)
 
   // We import implicits to support case classes
   import  spark.implicits._
 
   // Next, we can assign each row to a variable of the violation message class
-  val violationDataset = filteredDataframe.map { row =>
+  val violationDataset = filteredDfNotNull.map { row =>
     ViolationMessage(
       row.getString(0).toLong, // Summons Number
       row.getString(1), // ViolationCode
