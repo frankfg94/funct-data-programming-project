@@ -15,24 +15,11 @@ import scala.annotation.switch
 
 // Police Control Device
 
-object MyConsumerPolice extends App {
-
-  /*
-  def SetDronePath(value: Int, locationLong: BigDecimal, locationLat: BigDecimal) : Unit = {
-      println("New destination for the Drone : "  + locationLong + " / " + locationLat)
-      //MyProducerDrone.MoveDroneTo(value,locationLong,locationLat)
-  }
-*/
-
-
-  def MoveToManhantann() : Unit = {
-    //SetDronePath(1,40.758896,-73.985130)
-  }
-
+object ConsumerPoliceStandard extends App {
 
   import java.util.Properties
 
-  val topic="t2"
+  val topic="standard"
   val port = "9092"
 
   val  props = new Properties()
@@ -50,7 +37,7 @@ object MyConsumerPolice extends App {
   // We want to display the old messages
   consumer.poll(0)
   consumer.seekToBeginning(consumer.assignment())
-
+  println("Starting topic " + topic)
   // Message handler (non violation)
   while(true){
     val records=consumer.poll(100)
@@ -58,13 +45,6 @@ object MyConsumerPolice extends App {
         {
               val msg =  new Gson().fromJson(rec.value(),classOf[Message])
               println("Received message from drone n°"+ msg.droneId + " MSG : " + msg + " displayed at " + DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm").format(LocalDateTime.now) )
-          /*
-          val x = (rec: @switch) match {
-            case 1  => "1"
-            case 2  => "2"
-            case _  => "3"
-          }
-          */
         }
       )
   }

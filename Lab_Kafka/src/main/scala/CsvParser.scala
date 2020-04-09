@@ -2,9 +2,12 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType}
 //import org.apache.spark.sql.SparkSession
 
 object CsvParser extends App{
+
+
   println("Creating dataset..." )
 
   val pathOfCsv = "/home/frank/Desktop/tickets.csv"
@@ -14,11 +17,14 @@ object CsvParser extends App{
     .getOrCreate()
 
   val t0 = System.nanoTime()
-  val df = spark.read.format("csv").option("header", "true").load(pathOfCsv)
+  val df = spark.read
+    .format("csv")
+    .option("header", "true")
+    .load(pathOfCsv)
   val t1 = System.nanoTime()
   println("Finished creating dataset" )
   println("Total Load time : " + ((t1 - t0).toFloat/1000000000) + " seconds")
-  println(df.count() + " rows in total")
+  //println(df.count()+ " rows in total")
 
   // Dataframe but with only the necessary columns
   val filteredDataframe = df.select("Summons Number", "Plate ID", "Vehicle Body Type", "Violation Code", "Registration State")
@@ -42,7 +48,6 @@ object CsvParser extends App{
 
   violationDataset.show(100)
 
-  //MyProducerDrone.LoadDataSetOfViolations(violationDataset)
-
+  ProducerDrone.LoadDataSetOfViolations(violationDataset,spark)
 }
 

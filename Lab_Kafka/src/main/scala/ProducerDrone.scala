@@ -1,15 +1,14 @@
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
-import java.util.Properties
+import java.util.{Properties, UUID}
 
 import com.google.gson.Gson
-import kafka.utils.Json
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
-import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.{Dataset, SparkSession}
 
 
-object MyProducerDrone extends App {
-  def LoadDataSetOfViolations(vMsgs: Dataset[ViolationMessage]) : Unit = {
+object ProducerDrone extends App {
+  def LoadDataSetOfViolations(vMsgs: Dataset[ViolationMessage],  spark: SparkSession) : Unit = {
+
     val port = "9092"
     val props = new Properties()
     props.put("bootstrap.servers", "localhost:" + port)
@@ -19,29 +18,33 @@ object MyProducerDrone extends App {
 
     val topic = "violations"
     println("Starting to load data into Kafka")
-    /*
-        TODO : Enlever le foreach
-    vMsgs.foreach(vMsg => {
-      val record = new ProducerRecord(topic, vMsg.summonNumber.toString, new Gson().toJson(vMsg))
-      producer.send(record)
-    })
-     */
+    vMsgs.take(100).foreach { m =>
+      println("sending " + new Gson().toJson(m))
+      producer.send(new ProducerRecord(topic, new Gson().toJson(m)))
+    }
     println("Data loaded into kafka")
-    producer.close()
   }
 
 
   import java.util.Properties
 
- import org.apache.kafka.clients.producer._
+  import org.apache.kafka.clients.producer._
 
   def beginDronePatrol(long : BigDecimal, lat : BigDecimal, periodMilliseconds : Int, droneId : String) : Unit = {
     val rnd = new scala.util.Random
+    val randomViolationCode = rnd.nextInt(100) - 1
     val t = new java.util.Timer()
     val task = new java.util.TimerTask {
       def run() = {
-        val m = Message(long + rnd.nextInt(1) - rnd.nextInt(1), lat + rnd.nextInt(1) - rnd.nextInt(-1), 1, LocalDateTime.now.toString, droneId)
-        DroneTest.sendMsgToSoftware(m)
+        val m = Message(long + rnd.nextInt(1) - rnd.nextInt(1), lat + rnd.nextInt(1) - rnd.nextInt(1), 1, LocalDateTime.now.toString, droneId)
+        // 1 chance out of 10 to trigger a violationMsg
+        if(rnd.nextInt(10) == 1) {
+          val vm = ViolationMessage(1, randomViolationCode.toString, UUID.randomUUID().toString(),"SUBN","NY",m)
+          DroneTest.sendViolationMsgToSoftware(vm)
+        }
+        else {
+          DroneTest.sendMsgToSoftware(m)
+        }
       }
     }
     t.schedule(task, periodMilliseconds, periodMilliseconds)
@@ -83,7 +86,7 @@ object MyProducerDrone extends App {
    }
  }
 
- def sendDataToPoliceSoftware(m: Message): Unit = {
+ def sendDataToPoliceSoftware(m: Message,  topicName : String): Unit = {
   val port = "9092"
   val props = new Properties()
   props.put("bootstrap.servers", "localhost:" + port)
@@ -91,17 +94,32 @@ object MyProducerDrone extends App {
   props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
   val producer = new KafkaProducer[String, String](props)
 
-  // Interessant, on peut avoir plusieurs types pour un producer producer
-  val topic = "t2"
 
-
-  val record = new ProducerRecord(topic, m.droneId, new Gson().toJson(m))
+  val record = new ProducerRecord(topicName, m.droneId, new Gson().toJson(m))
   producer.send(record)
 
   println("Done")
   producer.close()
 
  }
+
+  def sendDataToPoliceSoftware(m: ViolationMessage,  topicName : String): Unit = {
+    val port = "9092"
+    val props = new Properties()
+    props.put("bootstrap.servers", "localhost:" + port)
+    props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+    props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+    val producer = new KafkaProducer[String, String](props)
+
+
+    val record = new ProducerRecord(topicName, m.message.droneId, new Gson().toJson(m))
+    producer.send(record)
+
+    println("Done")
+    producer.close()
+
+  }
+
 
 
 }
