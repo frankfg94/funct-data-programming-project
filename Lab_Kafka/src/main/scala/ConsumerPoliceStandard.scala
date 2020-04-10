@@ -1,16 +1,9 @@
-import java.time.{Duration, LocalDateTime}
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util
-import java.util.{Collections, Optional, UUID}
+import java.util.{Collections, UUID}
 
 import com.google.gson.Gson
-import org.apache.kafka.clients.admin.{AdminClient, AlterConfigOp, AlterConfigsOptions, AlterConfigsResult, AlterPartitionReassignmentsOptions, AlterPartitionReassignmentsResult, AlterReplicaLogDirsOptions, AlterReplicaLogDirsResult, Config, CreateAclsOptions, CreateAclsResult, CreateDelegationTokenOptions, CreateDelegationTokenResult, CreatePartitionsOptions, CreatePartitionsResult, CreateTopicsOptions, CreateTopicsResult, DeleteAclsOptions, DeleteAclsResult, DeleteConsumerGroupOffsetsOptions, DeleteConsumerGroupOffsetsResult, DeleteConsumerGroupsOptions, DeleteConsumerGroupsResult, DeleteRecordsOptions, DeleteRecordsResult, DeleteTopicsOptions, DeleteTopicsResult, DescribeAclsOptions, DescribeAclsResult, DescribeClusterOptions, DescribeClusterResult, DescribeConfigsOptions, DescribeConfigsResult, DescribeConsumerGroupsOptions, DescribeConsumerGroupsResult, DescribeDelegationTokenOptions, DescribeDelegationTokenResult, DescribeLogDirsOptions, DescribeLogDirsResult, DescribeReplicaLogDirsOptions, DescribeReplicaLogDirsResult, DescribeTopicsOptions, DescribeTopicsResult, ElectLeadersOptions, ElectLeadersResult, ExpireDelegationTokenOptions, ExpireDelegationTokenResult, ListConsumerGroupOffsetsOptions, ListConsumerGroupOffsetsResult, ListConsumerGroupsOptions, ListConsumerGroupsResult, ListPartitionReassignmentsOptions, ListPartitionReassignmentsResult, ListTopicsOptions, ListTopicsResult, NewPartitionReassignment, NewPartitions, NewTopic, RecordsToDelete, RemoveMembersFromConsumerGroupOptions, RemoveMembersFromConsumerGroupResult, RenewDelegationTokenOptions, RenewDelegationTokenResult}
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.common.{ElectionType, Metric, MetricName, TopicPartition, TopicPartitionReplica}
-import org.apache.kafka.common.acl.{AclBinding, AclBindingFilter}
-import org.apache.kafka.common.config.ConfigResource
-
-import scala.annotation.switch
 
 
 // Police Control Device
@@ -38,17 +31,22 @@ object ConsumerPoliceStandard extends App {
   consumer.poll(0)
   consumer.seekToBeginning(consumer.assignment())
   println("Starting topic " + topic)
-  // Message handler (non violation)
-  while(true){
-    val records=consumer.poll(100)
-      records.forEach( rec =>
-        {
-              val msg =  new Gson().fromJson(rec.value(),classOf[Message])
-              println("Received message from drone n°"+ msg.droneId + " MSG : " + msg + " displayed at " + DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm").format(LocalDateTime.now) )
-        }
-      )
+
+
+
+
+    // Message handler (non violation)
+    while(true){
+      val records=consumer.poll(100)
+       records.forEach( rec =>
+          {
+            val msg =  new Gson().fromJson(rec.value(),classOf[Message])
+            println("Received message from drone n°"+ msg.droneId + " MSG : " + msg + " displayed at " + DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm").format(LocalDateTime.now) )
+
+          }
+        )
   }
-  consumer.close()
+  //consumer.close()
 
   println("Done")
 }

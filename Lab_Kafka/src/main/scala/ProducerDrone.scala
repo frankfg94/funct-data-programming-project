@@ -18,11 +18,35 @@ object ProducerDrone extends App {
 
     val topic = "violations"
     println("Starting to load data into Kafka")
+    val t0 = System.nanoTime()
+    import org.apache.spark.sql.functions.{concat, lit}
+    import spark.implicits._ // << add this
+
+    val ds = vMsgs.select(
+      concat($"vehicleBodyType", lit(" "),
+      $"violationCode", lit(" "),
+      $"registrationState", lit(" "),
+      $"plateId", lit(" "),
+      $"summonNumber").alias("value"))
+
+    ds.show(5)
+
+      ds.write
+      .format("kafka")
+      .option("checkpointLocation", "checkpoint")
+      .option("kafka.bootstrap.servers", "localhost:9092")
+        .option("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+        .option("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+      .option("topic", "testTopic")
+      .save()
+
+/*
     vMsgs.take(100).foreach { m =>
       println("sending " + new Gson().toJson(m))
       producer.send(new ProducerRecord(topic, new Gson().toJson(m)))
-    }
-    println("Data loaded into kafka")
+    }*/
+    val t1 = System.nanoTime()
+    println("Data loaded into kafka " + ((t1 - t0).toFloat/1000000000) + " seconds")
   }
 
 
@@ -32,13 +56,13 @@ object ProducerDrone extends App {
 
   def beginDronePatrol(long : BigDecimal, lat : BigDecimal, periodMilliseconds : Int, droneId : String) : Unit = {
     val rnd = new scala.util.Random
-    val randomViolationCode = rnd.nextInt(100) - 1
     val t = new java.util.Timer()
     val task = new java.util.TimerTask {
       def run() = {
+        val randomViolationCode = rnd.nextInt(100) - 1
         val m = Message(long + rnd.nextInt(1) - rnd.nextInt(1), lat + rnd.nextInt(1) - rnd.nextInt(1), 1, LocalDateTime.now.toString, droneId)
         // 1 chance out of 10 to trigger a violationMsg
-        if(rnd.nextInt(10) == 1) {
+        if(rnd.nextInt(10) >= 1) {
           val vm = ViolationMessage(1, randomViolationCode.toString, UUID.randomUUID().toString(),"SUBN","NY",m)
           DroneTest.sendViolationMsgToSoftware(vm)
         }

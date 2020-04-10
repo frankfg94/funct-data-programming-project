@@ -22,7 +22,7 @@ object DroneTest extends App
                 val m5 = Message(2, 2, 2, LocalDateTime.now.plus(5, ChronoUnit.SECONDS).toString, "1")
 
                 // create a JSON string from the Person, then print it
-                sendMsgToSoftware(m1)
+               // sendMsgToSoftware(m1)
                 /*sendMsgToSoftware(m2)
                 sendMsgToSoftware(m3)
                 sendMsgToSoftware(m4)
@@ -38,7 +38,7 @@ object DroneTest extends App
 
                 def sendViolationMsgToSoftware(vm: ViolationMessage) : Unit = {
                         print("Sending " + new Gson().toJson(vm))
-                        ProducerDrone.sendDataToPoliceSoftware(vm, "violations")
+                        ProducerDrone.sendDataToPoliceSoftware(vm, "violations2")
                 }
 
 }
